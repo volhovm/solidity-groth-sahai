@@ -1,7 +1,7 @@
 pragma solidity >=0.4.22 <0.7.0;
 pragma experimental ABIEncoderV2;
 
-import "EC.sol";
+import "./EC.sol";
 
 // TODO So far I'm not using safemath. Maybe I should?
 
@@ -98,7 +98,7 @@ library GrothSahai {
     }
 
 
-    function verifyEq(GSInstance memory inst,
+    function verifyProof(GSInstance memory inst,
                       GSParams memory params,
                       GSCom memory com,
                       GSProof memory proof

@@ -15,7 +15,7 @@ pragma solidity >=0.5.16;
 // I'll replace it by something efficient maybe later, for now I just need the interface.
 // Also it's already using assembly.
 
-import "BN256G2.sol";
+import "./BN256G2.sol";
 
 library EC {
     struct G1Point {
