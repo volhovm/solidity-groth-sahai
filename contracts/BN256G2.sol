@@ -87,6 +87,7 @@ library BN256G2 {
             pt3[PTZX], pt3[PTZY]
         );
     }
+
     /**
      * @notice Multiply a twist point by a scalar
      * @param s     Scalar to multiply by

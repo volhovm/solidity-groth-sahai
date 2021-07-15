@@ -4,6 +4,12 @@ pragma experimental ABIEncoderV2;
 import "./GrothSahai.sol";
 
 contract TestGS {
+
+    struct SampleStruct{ uint x; uint y; }
+    function passStructSample(SampleStruct memory s) public view returns (bool) {
+        return s.x == 1;
+    }
+
     function verifyProof(GrothSahai.GSInstance memory inst,
                          GrothSahai.GSParams memory params,
                          GrothSahai.GSCom memory com,
