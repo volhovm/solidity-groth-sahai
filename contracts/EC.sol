@@ -82,6 +82,9 @@ library EC {
         }
         require (success);
     }
+    function scalar_mul(G2Point memory p, uint s) internal view returns (G2Point memory r) {
+        (r.X[0], r.X[1], r.Y[0], r.Y[1]) = BN256G2.ECTwistMul(s, p.X[0],p.X[1],p.Y[0],p.Y[1]);
+    }
     /// @return the result of computing the pairing check
     /// e(p1[0], p2[0]) *  .... * e(p1[n], p2[n]) == 1
     /// For example pairing([P1(), P1().negate()], [P2(), P2()]) should
