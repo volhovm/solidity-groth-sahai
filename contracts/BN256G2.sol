@@ -195,9 +195,9 @@ library BN256G2 {
         uint256 xx, uint256 xy,
         uint256 yx, uint256 yy
     ) internal pure returns (bool) {
-        uint256 yyx;
+        uint256 yyx; // y^2
         uint256 yyy;
-        uint256 xxxx;
+        uint256 xxxx; // x^3
         uint256 xxxy;
         (yyx, yyy) = _FQ2Mul(yx, yy, yx, yy);
         (xxxx, xxxy) = _FQ2Mul(xx, xy, xx, xy);
@@ -206,6 +206,16 @@ library BN256G2 {
         (yyx, yyy) = _FQ2Sub(yyx, yyy, TWISTBX, TWISTBY);
         return yyx == 0 && yyy == 0;
     }
+
+    // TODO check whether this is sane
+    function ECTwistNeg(uint256 xx, uint256 xy, uint256 yx, uint256 yy)
+        internal pure returns (uint256 rxx, uint256 rxy, uint256 ryx, uint256 ryy){
+        rxx = xx;
+        rxy = xy;
+        ryx = submod(0,ryx,FIELD_MODULUS);
+        ryy = submod(0,ryy,FIELD_MODULUS);
+    }
+
     function _modInv(uint256 a, uint256 n) internal view returns (uint256 result) {
         bool success;
         assembly {

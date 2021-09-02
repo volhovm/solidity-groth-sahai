@@ -67,6 +67,14 @@ library EC {
     function addition(G2Point memory p1, G2Point memory p2) internal view returns (G2Point memory r) {
         (r.X[0], r.X[1], r.Y[0], r.Y[1]) = BN256G2.ECTwistAdd(p1.X[0],p1.X[1],p1.Y[0],p1.Y[1],p2.X[0],p2.X[1],p2.Y[0],p2.Y[1]);
     }
+    // TEST NEGATE/SUBTRACT
+    function negate(G2Point memory p1) internal pure returns (G2Point memory r) {
+        (r.X[0], r.X[1], r.Y[0], r.Y[1]) = BN256G2.ECTwistNeg(p1.X[0],p1.X[1],p1.Y[0],p1.Y[1]);
+    }
+    // TEST NEGATE/SUBTRACT
+    function subtract(G2Point memory p1, G2Point memory p2) internal view returns (G2Point memory) {
+        return addition(p1,negate(p2));
+    }
     /// @return r the product of a point on G1 and a scalar, i.e.
     /// p == p.scalar_mul(1) and p.addition(p) == p.scalar_mul(2) for all points p.
     function scalar_mul(G1Point memory p, uint s) internal view returns (G1Point memory r) {

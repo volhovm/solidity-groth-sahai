@@ -51,14 +51,14 @@ contract("TestGS", accounts => {
     });
 
 
-//    it("verifyProofSample parses args correctly", () => {
-//        let gsInst = { m: 2, n: 2, gammaT: [[1,2],[3,4]], a: [-1,1], b: [1,1] };
-//        let gsParams = {};
-//        let gsCom = {};
-//        let gsProof = {};
-//        TestGS.deployed()
-//            .then(instance => instance.verifyProof.call(gsInst,gsParams,gsCom,gsProof))
-//            .then(result => assert.equal(result.valueOf(), true, "Sample proof verifies correctly"));
-//    });
+    it("verifyProofSample parses args correctly", () => {
+        let gsInst = { m: 2, n: 2, gammaT: [[1,2],[3,4]], a: [-1,1], b: [1,1] };
+        let gsParams;
+        let gsCom;
+        let gsProof;
+        TestGS.deployed()
+            .then(instance => instance.verifyProof.call(gsInst,gsParams,gsCom,gsProof))
+            .then(result => assert.equal(result.valueOf(), true, "Sample proof verifies correctly"));
+    });
 
 });
