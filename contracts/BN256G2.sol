@@ -212,8 +212,8 @@ library BN256G2 {
         internal pure returns (uint256 rxx, uint256 rxy, uint256 ryx, uint256 ryy){
         rxx = xx;
         rxy = xy;
-        ryx = submod(0,ryx,FIELD_MODULUS);
-        ryy = submod(0,ryy,FIELD_MODULUS);
+        ryx = submod(0,yx,FIELD_MODULUS);
+        ryy = submod(0,yy,FIELD_MODULUS);
     }
 
     function _modInv(uint256 a, uint256 n) internal view returns (uint256 result) {
@@ -226,7 +226,7 @@ library BN256G2 {
             mstore(add(freemem,0x60), a)
             mstore(add(freemem,0x80), sub(n, 2))
             mstore(add(freemem,0xA0), n)
-            success := staticcall(sub(gas(), 2000), 5, freemem, 0xC0, freemem, 0x20)
+            success := staticcall(sub(gas(), 2000), 0x05, freemem, 0xC0, freemem, 0x20)
             result := mload(freemem)
         }
         require(success);

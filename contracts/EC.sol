@@ -27,6 +27,7 @@ library EC {
         uint[2] X;
         uint[2] Y;
     }
+
     /// @return the generator of G1
     function P1() pure internal returns (G1Point memory) {
         return G1Point(1, 2);
@@ -40,6 +41,28 @@ library EC {
              4082367875863433681332203403145435568316851327593401208105741076214120093531]
         );
     }
+
+    /// @return zero of G1
+    function Z1() pure internal returns (G1Point memory) {
+        return G1Point(0,0);
+    }
+    /// @return zero of G2
+    function Z2() pure internal returns (G2Point memory) {
+        // No idea why solc can't derive the types of zeroes here.
+        return G2Point([uint(0),uint(0)],[uint(0),uint(0)]);
+    }
+
+
+    function pointEq(G1Point memory a, G1Point memory b) internal pure returns (bool) {
+        return a.X == b.X && a.Y == b.Y;
+    }
+
+    function pointEq(G2Point memory a, G2Point memory b) internal pure returns (bool) {
+        return a.X[0] == b.X[0] && a.Y[0] == b.Y[0] &&
+               a.X[1] == b.X[1] && a.Y[1] == b.Y[1];
+    }
+
+
     /// @return the negation of p, i.e. p.addition(p.negate()) should be zero.
     function negate(G1Point memory p) pure internal returns (G1Point memory) {
         // The prime q in the base field F_q for G1
@@ -48,6 +71,13 @@ library EC {
             return G1Point(0, 0);
         return G1Point(p.X, q - (p.Y % q));
     }
+
+    // Why not just scalar mul by -1? .. scalar mul only for uint
+    // TEST NEGATE/SUBTRACT
+    function negate(G2Point memory p1) internal pure returns (G2Point memory r) {
+        (r.X[0], r.X[1], r.Y[0], r.Y[1]) = BN256G2.ECTwistNeg(p1.X[0],p1.X[1],p1.Y[0],p1.Y[1]);
+    }
+
     /// @return r the sum of two points of G1
     function addition(G1Point memory p1, G1Point memory p2) internal view returns (G1Point memory r) {
         uint[4] memory input;
@@ -57,42 +87,53 @@ library EC {
         input[3] = p2.Y;
         bool success;
         assembly {
-            success := staticcall(sub(gas(), 2000), 6, input, 0xc0, r, 0x60)
+            success := staticcall(sub(gas(), 2000), 0x06, input, 0xc0, r, 0x60)
             // Use "invalid" to make gas estimation work
             switch success case 0 { invalid() }
         }
         require(success);
     }
+
     /// @return r the sum of two points of G2
     function addition(G2Point memory p1, G2Point memory p2) internal view returns (G2Point memory r) {
         (r.X[0], r.X[1], r.Y[0], r.Y[1]) = BN256G2.ECTwistAdd(p1.X[0],p1.X[1],p1.Y[0],p1.Y[1],p2.X[0],p2.X[1],p2.Y[0],p2.Y[1]);
     }
-    // TEST NEGATE/SUBTRACT
-    function negate(G2Point memory p1) internal pure returns (G2Point memory r) {
-        (r.X[0], r.X[1], r.Y[0], r.Y[1]) = BN256G2.ECTwistNeg(p1.X[0],p1.X[1],p1.Y[0],p1.Y[1]);
-    }
+
     // TEST NEGATE/SUBTRACT
     function subtract(G2Point memory p1, G2Point memory p2) internal view returns (G2Point memory) {
         return addition(p1,negate(p2));
     }
+
     /// @return r the product of a point on G1 and a scalar, i.e.
     /// p == p.scalar_mul(1) and p.addition(p) == p.scalar_mul(2) for all points p.
-    function scalar_mul(G1Point memory p, uint s) internal view returns (G1Point memory r) {
+    function scalar_mul_pos(G1Point memory p, uint s) internal view returns (G1Point memory r) {
         uint[3] memory input;
         input[0] = p.X;
         input[1] = p.Y;
         input[2] = s;
         bool success;
         assembly {
-            success := staticcall(sub(gas(), 2000), 7, input, 0x80, r, 0x60)
-            // Use "invalid" to make gas estimation work
-            switch success case 0 { invalid() }
+        success := staticcall(sub(gas(), 2000), 0x07, input, 0x80, r, 0x60)
+                // Use "invalid" to make gas estimation work
+                switch success case 0 { invalid() }
         }
         require (success);
     }
-    function scalar_mul(G2Point memory p, uint s) internal view returns (G2Point memory r) {
+
+    function scalar_mul_pos(G2Point memory p, uint s) internal view returns (G2Point memory r) {
         (r.X[0], r.X[1], r.Y[0], r.Y[1]) = BN256G2.ECTwistMul(s, p.X[0],p.X[1],p.Y[0],p.Y[1]);
     }
+
+    function scalar_mul(G1Point memory p, int s) internal view returns (G1Point memory) {
+        if (s < 0) { p = negate(p); }
+        return scalar_mul_pos(p, (uint) (s >= 0 ? s : -s));
+    }
+
+    function scalar_mul(G2Point memory p, int s) internal view returns (G2Point memory) {
+        if (s < 0) { p = negate(p); }
+        return scalar_mul_pos(p, (uint) (s >= 0 ? s : -s));
+    }
+
     /// @return the result of computing the pairing check
     /// e(p1[0], p2[0]) *  .... * e(p1[n], p2[n]) == 1
     /// For example pairing([P1(), P1().negate()], [P2(), P2()]) should
@@ -114,7 +155,7 @@ library EC {
         uint[1] memory out;
         bool success;
         assembly {
-            success := staticcall(sub(gas(), 2000), 8, add(input, 0x20), mul(inputSize, 0x20), out, 0x20)
+            success := staticcall(sub(gas(), 2000), 0x08, add(input, 0x20), mul(inputSize, 0x20), out, 0x20)
             // Use "invalid" to make gas estimation work
             switch success case 0 { invalid() }
         }
