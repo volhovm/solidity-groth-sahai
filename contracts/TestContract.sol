@@ -35,13 +35,16 @@ contract TestGS {
         return true;
     }
 
+
+    event EDebugCom(GS.GSCom com);
+
     function verifyProof1(GS.GSInstance memory inst,
                           int[] memory x0,
                           int[] memory y0,
                           int[][][] memory rst,
                           int[2][2][2] memory paramsRand
                          ) public returns (bool) {
-        emit EDebug("Point1");
+        //emit EDebug("Point1");
         EC.G1Point[] memory x = new EC.G1Point[](inst.m);
         EC.G2Point[] memory y = new EC.G2Point[](inst.n);
         for (uint i = 0; i < inst.m; i++) { x[i] = EC.scalar_mul(EC.P1(), x0[i]); }
@@ -49,6 +52,7 @@ contract TestGS {
 
         GS.GSParams memory params = GS.buildParams(paramsRand);
         GS.GSCom memory com = GS.commit(inst,params,x,y,rst);
+        //emit EDebugCom(com);
         GS.GSProof memory proof = GS.prove(inst,params,com,x,y,rst);
 
         return GS.verifyProof(inst, params, com, proof);

@@ -62,27 +62,33 @@ contract("TestGS", accounts => {
         assert.equal(result.valueOf(), true, "The result was not true");
     });
 
-//    // witness X Y
-//    // Equation: e(X1,H)e(G,-Y2) = 1
-//    // X2 = 1, Y1 = 1, so A = (-1,1), B = (1,-1)
-//    // Gamma =
-//    //  (1  0)
-//    //  (0 -1)
-//    // Basically the witness inside X1 should be the
-//    it("verifyProofSample returns true", () => {
-//        let gsInst = { m: 2, n: 2, gammaT: [[1,0],[0,-1]], a: [-1,1], b: [1,-1] };
-//        let x = [123, 1];
-//        let y = [1, 123];
-//        // Zeroes in commitments here correspond to non-(-1) values in a and b
-//        let rst = [ [[1235,3462],[0,0]],
-//                    [[0,0],[1924,6258]],
-//                    [[8334,1953],[2342,4935]]
-//                  ];
-//        let paramsR = [[[64321,83371],[12924,62558]],
-//                       [[83334,19553],[25342,43935]]];
-//        return TestGS.deployed()
-//            .then(instance => instance.verifyProof1.call(gsInst,x,y,rst,paramsR))
-//            .then(result =>  assert.equal(result.valueOf(), true, "Proof verification failed"));
-//    });
+    // witness X Y
+    // Equation: e(X1,H)e(G,-Y2) = 1
+    // X2 = 1, Y1 = 1, so A = (-1,1), B = (1,-1)
+    // Gamma =
+    //  (1  0)
+    //  (0 -1)
+    // Basically the witness inside X1 should be the
+    it("verifyProofSample returns true", async () => {
+        let gsInst = { m: 2, n: 2, gammaT: [[1,0],[0,-1]], a: [-1,1], b: [1,-1] };
+        let x = [123, 1];
+        let y = [1, 123];
+        // Zeroes in commitments here correspond to non-(-1) values in a and b
+        let rst = [ [[1235,3462],[0,0]],
+                    [[0,0],[1924,6258]],
+                    [[8334,1953],[2342,4935]]
+                  ];
+        let paramsR = [[[64321,83371],[12924,62558]],
+                       [[83334,19553],[25342,43935]]];
+
+
+        const instance = await TestGS.deployed();
+        const result = await instance.verifyProof1.call(gsInst,x,y,rst,paramsR);
+
+        const receipt = await instance.verifyProof1(gsInst,x,y,rst,paramsR);
+        //console.log(receipt.logs);
+
+        assert.equal(result.valueOf(), true, "Proof verification failed");
+    });
 
 });

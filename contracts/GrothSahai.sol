@@ -48,7 +48,7 @@ library GS {
     // is an example vector, consisting of field elements and bottoms.
     function comAlike (V1Elem[] memory u, int[] memory e) private view returns (bool) {
         for (uint i = 0; i < e.length; i++) {
-            if (e[i] != -1 && (!(EC.pointEq(u[i].v1[0], EC.P1())) ||
+            if (e[i] != -1 && (!(EC.pointEq(u[i].v1[0], EC.Z1())) ||
                                !(EC.pointEq(u[i].v1[1], EC.scalar_mul(EC.P1(), e[i])))))
                 return false;
         }
@@ -58,12 +58,14 @@ library GS {
     // Same as comAlike for G1, but for G2
     function comAlike (V2Elem[] memory u, int[] memory e) private view returns (bool) {
         for (uint i = 0; i < e.length; i++) {
-            if (e[i] != -1 && (!(EC.pointEq(u[i].v2[0], EC.P2())) ||
+            if (e[i] != -1 && (!(EC.pointEq(u[i].v2[0], EC.Z2())) ||
                                !(EC.pointEq(u[i].v2[1], EC.scalar_mul(EC.P2(), e[i])))))
                 return false;
         }
         return true;
     }
+
+
 
     function verifyProof(GSInstance memory inst,
                       GSParams memory params,
@@ -74,32 +76,32 @@ library GS {
         if (!comAlike(com.com1, inst.a)) return false;
         if (!comAlike(com.com2, inst.b)) return false;
 
-        //        EC.G1Point[] memory p1 = new EC.G1Point[](inst.m + 8);
-        //        EC.G2Point[] memory p2 = new EC.G2Point[](inst.m + 8);
-        //
-        //        for (uint vv1 = 0; vv1 < 2; vv1++) {
-        //            for (uint vv2 = 0; vv2 < 2; vv2++) {
-        //                for (uint i = 0; i < inst.m; i++) {
-        //                    p1[i] = com.com1[i].v1[vv1];
-        //                    for (uint j = 0; j < inst.n; j++) {
-        //                        p2[i] = EC.scalar_mul(com.com2[j].v2[vv2], inst.gammaT[j][i]);
-        //                    }
-        //                }
-        //                for (uint i = 0; i < 2; i++) {
-        //                    for (uint j = 0; j < 2; j++) {
-        //                        p1[inst.m+i*2+j] = EC.negate(params.u1[i].v1[vv1]);
-        //                        p2[inst.m+i*2+j] = proof.phi[j].v2[vv2];
-        //                    }
-        //                }
-        //                for (uint i = 0; i < 2; i++) {
-        //                    for (uint j = 0; j < 2; j++) {
-        //                        p1[inst.m+4+i*2+j] = proof.theta[i].v1[vv1];
-        //                        p2[inst.m+4+i*2+j] = EC.negate(params.u2[j].v2[vv2]);
-        //                    }
-        //                }
-        //                if (!EC.pairing(p1,p2)) return false;
-        //            }
-        //        }
+        EC.G1Point[] memory p1 = new EC.G1Point[](inst.m + 8);
+        EC.G2Point[] memory p2 = new EC.G2Point[](inst.m + 8);
+
+        for (uint vv1 = 0; vv1 < 2; vv1++) {
+            for (uint vv2 = 0; vv2 < 2; vv2++) {
+                for (uint i = 0; i < inst.m; i++) {
+                    p1[i] = com.com1[i].v1[vv1];
+                    for (uint j = 0; j < inst.n; j++) {
+                        p2[i] = EC.scalar_mul(com.com2[j].v2[vv2], inst.gammaT[j][i]);
+                    }
+                }
+                for (uint i = 0; i < 2; i++) {
+                    for (uint j = 0; j < 2; j++) {
+                        p1[inst.m+i*2+j] = EC.negate(params.u1[i].v1[vv1]);
+                        p2[inst.m+i*2+j] = proof.phi[j].v2[vv2];
+                    }
+                }
+                for (uint i = 0; i < 2; i++) {
+                    for (uint j = 0; j < 2; j++) {
+                        p1[inst.m+4+i*2+j] = proof.theta[i].v1[vv1];
+                        p2[inst.m+4+i*2+j] = EC.negate(params.u2[j].v2[vv2]);
+                    }
+                }
+                if (!EC.pairing(p1,p2)) return false;
+            }
+        }
 
         return true;
     }
@@ -205,9 +207,8 @@ library GS {
                 // -T^T U_2
                 EC.G2Point memory tmp;
                 for (uint j = 0; j < 2; j++) {
-                    tmp = EC.negate(EC.scalar_mul(params.u2[j].v2[vv], rst[2][j][i]));
-                    //res.phi[i].v2[vv] = EC.addition(res.phi[i].v2[vv], tmp);
-                    emit EDebug1("prove", tmp);
+                    res.phi[i].v2[vv] = EC.addition(res.phi[i].v2[vv], EC.negate(EC.scalar_mul(params.u2[j].v2[vv], rst[2][j][i])));
+                    //emit EDebug1("prove", tmp);
                 }
             }
         }
