@@ -3,32 +3,32 @@ const TestGS = artifacts.require("TestGS");
 contract("TestGS", accounts => {
 
 
-    it("dummy function should pass", () =>
-        TestGS.deployed()
-            .then(instance => instance.dummyFunction.call(true))
-            .then(result => {
-                assert.equal( result.valueOf(), true, "Mda, dummy function tast has failed");
-            }));
-    it("inverted dummy function should fail", () =>
-        TestGS.deployed()
-            .then(instance => instance.dummyFunction.call(false))
-            .then(result =>
-                assert.equal(result.valueOf(), false, "Somehow dummy function succeeded")
-            ));
-
-    it("passStructSample positive", () => {
-        return TestGS.deployed()
-            .then(instance => instance.passStructSample.call({x:1, y:2}))
-            .then(result => {
-                assert.equal(result.valueOf(), true, "Struct was passed incorrectly");
-            });});
-
-    it("passStructSample negative", () => {
-        return TestGS.deployed()
-            .then(instance => instance.passStructSample.call({x:0, y:2}))
-            .then(result => {
-                assert.equal(result.valueOf(), false, "Struct was passed incorrectly");
-            });});
+//    it("dummy function should pass", () =>
+//        TestGS.deployed()
+//            .then(instance => instance.dummyFunction.call(true))
+//            .then(result => {
+//                assert.equal( result.valueOf(), true, "Mda, dummy function tast has failed");
+//            }));
+//    it("inverted dummy function should fail", () =>
+//        TestGS.deployed()
+//            .then(instance => instance.dummyFunction.call(false))
+//            .then(result =>
+//                assert.equal(result.valueOf(), false, "Somehow dummy function succeeded")
+//            ));
+//
+//    it("passStructSample positive", () => {
+//        return TestGS.deployed()
+//            .then(instance => instance.passStructSample.call({x:1, y:2}))
+//            .then(result => {
+//                assert.equal(result.valueOf(), true, "Struct was passed incorrectly");
+//            });});
+//
+//    it("passStructSample negative", () => {
+//        return TestGS.deployed()
+//            .then(instance => instance.passStructSample.call({x:0, y:2}))
+//            .then(result => {
+//                assert.equal(result.valueOf(), false, "Struct was passed incorrectly");
+//            });});
 
 //    it("passStructSample async", () => {
 //        let meta;
@@ -52,15 +52,15 @@ contract("TestGS", accounts => {
 
 
 
-    it("negation in G1/G2 works", async () => {
-        const instance = await TestGS.deployed();
-        const result = await instance.testNegate.call();
-        const receipt = await instance.testNegate();
-        console.log(receipt.logs);
-
-
-        assert.equal(result.valueOf(), true, "The result was not true");
-    });
+//    it("negation in G1/G2 works", async () => {
+//        const instance = await TestGS.deployed();
+//        const result = await instance.testNegate.call();
+//        const receipt = await instance.testNegate();
+//        console.log(receipt.logs);
+//
+//
+//        assert.equal(result.valueOf(), true, "The result was not true");
+//    });
 
     // witness X Y
     // Equation: e(X1,H)e(G,-Y2) = 1
@@ -70,14 +70,25 @@ contract("TestGS", accounts => {
     //  (0 -1)
     // Basically the witness inside X1 should be the
     it("verifyProofSample returns true", async () => {
-        let gsInst = { m: 2, n: 2, gammaT: [[1,0],[0,-1]], a: [-1,1], b: [1,-1] };
-        let x = [123, 1];
-        let y = [1, 123];
+        let gsInst = { m: 2, n: 2, gammaT: [[1,0],[0,-1]], a: [-1,0], b: [0,-1] };
         // Zeroes in commitments here correspond to non-(-1) values in a and b
+        let x = [123, 0];
+        let y = [0, 123];
         let rst = [ [[1235,3462],[0,0]],
                     [[0,0],[1924,6258]],
                     [[8334,1953],[2342,4935]]
                   ];
+
+//        // TESTING: trivial randomness map will:
+//        // (1) embed commitments without randomness, just as iota_1(X) / iota_2(Y)
+//        // (2) simplify proofs: theta = T U_1, phi = -T^T U_2
+//        let rst = [ [[0,0],[0,0]],
+//                    [[0,0],[0,0]],
+//                    [[1,1],[1,1]]
+//                  ];
+
+
+
         let paramsR = [[[64321,83371],[12924,62558]],
                        [[83334,19553],[25342,43935]]];
 
@@ -85,8 +96,9 @@ contract("TestGS", accounts => {
         const instance = await TestGS.deployed();
         const result = await instance.verifyProof1.call(gsInst,x,y,rst,paramsR);
 
+        // Showing events
         const receipt = await instance.verifyProof1(gsInst,x,y,rst,paramsR);
-        //console.log(receipt.logs);
+        console.log(receipt.logs);
 
         assert.equal(result.valueOf(), true, "Proof verification failed");
     });

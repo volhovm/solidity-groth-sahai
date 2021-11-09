@@ -66,18 +66,22 @@ library GS {
     }
 
 
+    event EDebugMsg(string logmsg);
+
 
     function verifyProof(GSInstance memory inst,
-                      GSParams memory params,
-                      GSCom memory com,
-                      GSProof memory proof
-                      ) public view returns (bool) {
+                         GSParams memory params,
+                         GSCom memory com,
+                         GSProof memory proof
+                        ) public returns (bool) {
 
+        emit EDebugMsg("before coms");
         if (!comAlike(com.com1, inst.a)) return false;
         if (!comAlike(com.com2, inst.b)) return false;
+        emit EDebugMsg("after coms");
 
-        EC.G1Point[] memory p1 = new EC.G1Point[](inst.m + 8);
-        EC.G2Point[] memory p2 = new EC.G2Point[](inst.m + 8);
+        EC.G1Point[] memory p1 = new EC.G1Point[](inst.m + 4);
+        EC.G2Point[] memory p2 = new EC.G2Point[](inst.m + 4);
 
         for (uint vv1 = 0; vv1 < 2; vv1++) {
             for (uint vv2 = 0; vv2 < 2; vv2++) {
@@ -88,18 +92,24 @@ library GS {
                     }
                 }
                 for (uint i = 0; i < 2; i++) {
-                    for (uint j = 0; j < 2; j++) {
-                        p1[inst.m+i*2+j] = EC.negate(params.u1[i].v1[vv1]);
-                        p2[inst.m+i*2+j] = proof.phi[j].v2[vv2];
-                    }
+                    p1[inst.m+i] = EC.negate(params.u1[i].v1[vv1]);
+                    p2[inst.m+i] = proof.phi[i].v2[vv2];
                 }
                 for (uint i = 0; i < 2; i++) {
-                    for (uint j = 0; j < 2; j++) {
-                        p1[inst.m+4+i*2+j] = proof.theta[i].v1[vv1];
-                        p2[inst.m+4+i*2+j] = EC.negate(params.u2[j].v2[vv2]);
-                    }
+                   p1[inst.m+2+i] = proof.theta[i].v1[vv1];
+                   p2[inst.m+2+i] = EC.negate(params.u2[i].v2[vv2]);
                 }
+                // We don't need this because 'pairing' func adds 1 to the equation
+                //if (vv1 == 1 && vv2 == 1) {
+                //    // Something wrong here definitely.
+                //    p1[inst.m+5] = EC.Z1();
+                //    p2[inst.m+5] = EC.Z2();
+                //} else {
+                //    p1[inst.m+5] = EC.P1();
+                //    p2[inst.m+5] = EC.P2();
+                //}
                 if (!EC.pairing(p1,p2)) return false;
+                emit EDebugMsg("STEP ?/4");
             }
         }
 
@@ -135,11 +145,10 @@ library GS {
 
         {EC.G1Point memory tmp;
         for (uint i = 0; i < inst.m; i++) {
-            com1[i].v1[1] = EC.Z1();
             for (uint vv = 0; vv < 2; vv++) {
                 com1[i].v1[vv] =
-                    EC.addition(EC.scalar_mul (params.u1[0].v1[vv], rs[0][i][0]),
-                                EC.scalar_mul (params.u1[1].v1[vv], rs[0][i][1]));
+                    EC.addition(EC.scalar_mul(params.u1[0].v1[vv], rs[0][i][0]),
+                                EC.scalar_mul(params.u1[1].v1[vv], rs[0][i][1]));
             }
             com1[i].v1[1] = EC.addition(com1[i].v1[1], x[i]);
         }}
@@ -148,8 +157,8 @@ library GS {
         for (uint i = 0; i < inst.n; i++) {
             for (uint vv = 0; vv < 2; vv++) {
                 com2[i].v2[vv] =
-                    EC.addition(EC.scalar_mul (params.u2[0].v2[vv], rs[1][i][0]),
-                                EC.scalar_mul (params.u2[1].v2[vv], rs[1][i][1]));
+                    EC.addition(EC.scalar_mul(params.u2[0].v2[vv], rs[1][i][0]),
+                                EC.scalar_mul(params.u2[1].v2[vv], rs[1][i][1]));
             }
             com2[i].v2[1] = EC.addition(com2[i].v2[1], y[i]);
         }}
@@ -172,7 +181,7 @@ library GS {
         for (uint i = 0; i < 2; i++) {
             // T U_1
             for (uint vv = 0; vv < 2; vv++) {
-                res.theta[i].v1[0] = EC.Z1();
+                res.theta[i].v1[vv] = EC.Z1();
                 for (uint j = 0; j < 2; j++) {
                     res.theta[i].v1[vv] =
                         EC.addition(res.theta[i].v1[vv],
@@ -185,7 +194,7 @@ library GS {
                     res.theta[i].v1[1] =
                         EC.addition(res.theta[i].v1[1],
                                     EC.scalar_mul(EC.scalar_mul(x[k], inst.gammaT[j][k]),
-                                                  rst[1][j][0]));
+                                                  rst[1][j][i]));
                 }
             }
         }
@@ -195,7 +204,7 @@ library GS {
         // phi, v2[0] and v2[1]
         for (uint vv = 0; vv < 2; vv++) {
             for (uint i = 0; i < 2; i++) {
-                res.phi[i].v2[vv] = EC.P2();
+                res.phi[i].v2[vv] = EC.Z2();
                 // r^T \Gamma D
                 for (uint j = 0; j < inst.m; j++) {
                     for (uint k = 0; k < inst.n; k++) {
