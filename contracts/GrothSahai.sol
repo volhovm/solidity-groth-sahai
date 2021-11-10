@@ -7,6 +7,14 @@ import "./EC.sol";
 
 library GS {
 
+
+    event EDebugMsg(string logmsg);
+    event EDebugPoint(EC.G2Point pnt);
+    event EDebugIntarr(int[] arr);
+
+    event EDebugCom(GS.GSCom com);
+
+
     struct V1Elem {
         EC.G1Point[2] v1;
     }
@@ -56,17 +64,14 @@ library GS {
     }
 
     // Same as comAlike for G1, but for G2
-    function comAlike (V2Elem[] memory u, int[] memory e) private view returns (bool) {
+    function comAlike (V2Elem[] memory u, int[] memory e) private returns (bool) {
         for (uint i = 0; i < e.length; i++) {
-            if (e[i] != -1 && (!(EC.pointEq(u[i].v2[0], EC.Z2())) ||
-                               !(EC.pointEq(u[i].v2[1], EC.scalar_mul(EC.P2(), e[i])))))
+                if (e[i] != -1 && (!(EC.pointEq(u[i].v2[0], EC.Z2())) ||
+                                   !(EC.pointEq(u[i].v2[1], EC.scalar_mul(EC.P2(), e[i])))))
                 return false;
         }
         return true;
     }
-
-
-    event EDebugMsg(string logmsg);
 
 
     function verifyProof(GSInstance memory inst,
@@ -75,43 +80,59 @@ library GS {
                          GSProof memory proof
                         ) public returns (bool) {
 
-        emit EDebugMsg("before coms");
-        if (!comAlike(com.com1, inst.a)) return false;
-        if (!comAlike(com.com2, inst.b)) return false;
-        emit EDebugMsg("after coms");
 
-        EC.G1Point[] memory p1 = new EC.G1Point[](inst.m + 4);
-        EC.G2Point[] memory p2 = new EC.G2Point[](inst.m + 4);
+        //emit EDebugCom(com);
+        //EC.G2Point memory v1 = EC.scalar_mul(EC.P2(), 0);
+        //EC.G2Point memory v2 = EC.scalar_mul(EC.P2(), 0);
+        return false;
 
-        for (uint vv1 = 0; vv1 < 2; vv1++) {
-            for (uint vv2 = 0; vv2 < 2; vv2++) {
-                for (uint i = 0; i < inst.m; i++) {
-                    p1[i] = com.com1[i].v1[vv1];
-                    for (uint j = 0; j < inst.n; j++) {
-                        p2[i] = EC.scalar_mul(com.com2[j].v2[vv2], inst.gammaT[j][i]);
-                    }
-                }
-                for (uint i = 0; i < 2; i++) {
-                    p1[inst.m+i] = EC.negate(params.u1[i].v1[vv1]);
-                    p2[inst.m+i] = proof.phi[i].v2[vv2];
-                }
-                for (uint i = 0; i < 2; i++) {
-                   p1[inst.m+2+i] = proof.theta[i].v1[vv1];
-                   p2[inst.m+2+i] = EC.negate(params.u2[i].v2[vv2]);
-                }
-                // We don't need this because 'pairing' func adds 1 to the equation
-                //if (vv1 == 1 && vv2 == 1) {
-                //    // Something wrong here definitely.
-                //    p1[inst.m+5] = EC.Z1();
-                //    p2[inst.m+5] = EC.Z2();
-                //} else {
-                //    p1[inst.m+5] = EC.P1();
-                //    p2[inst.m+5] = EC.P2();
-                //}
-                if (!EC.pairing(p1,p2)) return false;
-                emit EDebugMsg("STEP ?/4");
-            }
-        }
+        //emit EDebugMsg("before coms");
+        //emit EDebugIntarr(inst.b);
+
+        //EC.G2Point memory tmp = EC.scalar_mul(EC.P2(), inst.b[0]);
+        //bool v = EC.pointEq(com.com2[0].v2[1], tmp);
+
+        //        if (inst.b[0] != -1 && (!(EC.pointEq(com.com2[0].v2[0], EC.Z2())) ||
+        //                           !(EC.pointEq(com.com2[0].v2[1], EC.scalar_mul(EC.P2(), inst.b[0])))))
+        //            { return false; }
+
+        // It segfaults when executed several times, but not once? WHY?
+        // Find a smipler example?
+        //bool v2 = EC.pointEq(com.com2[0].v2[1], EC.scalar_mul(EC.P2(), inst.b[0]));
+        //bool v3 = EC.pointEq(com.com2[0].v2[1], EC.scalar_mul(EC.P2(), inst.b[0]));
+
+        // This fails also
+        //EC.G2Point memory v2 = EC.scalar_mul(EC.P2(), inst.b[0]);
+        //EC.G2Point memory v3 = EC.scalar_mul(EC.P2(), inst.b[0]);
+
+
+        //if (!comAlike(com.com1, inst.a)) return false;
+        //if (!comAlike(com.com2, inst.b)) return false;
+        //emit EDebugMsg("after coms");
+
+        //EC.G1Point[] memory p1 = new EC.G1Point[](inst.m + 4);
+        //EC.G2Point[] memory p2 = new EC.G2Point[](inst.m + 4);
+
+        //for (uint vv1 = 0; vv1 < 2; vv1++) {
+        //    for (uint vv2 = 0; vv2 < 2; vv2++) {
+        //        for (uint i = 0; i < inst.m; i++) {
+        //            p1[i] = com.com1[i].v1[vv1];
+        //            for (uint j = 0; j < inst.n; j++) {
+        //                p2[i] = EC.scalar_mul(com.com2[j].v2[vv2], inst.gammaT[j][i]);
+        //            }
+        //        }
+        //        for (uint i = 0; i < 2; i++) {
+        //            p1[inst.m+i] = EC.negate(params.u1[i].v1[vv1]);
+        //            p2[inst.m+i] = proof.phi[i].v2[vv2];
+        //        }
+        //        for (uint i = 0; i < 2; i++) {
+        //           p1[inst.m+2+i] = proof.theta[i].v1[vv1];
+        //           p2[inst.m+2+i] = EC.negate(params.u2[i].v2[vv2]);
+        //        }
+        //        if (!EC.pairing(p1,p2)) return false;
+        //        emit EDebugMsg("STEP ?/4");
+        //    }
+        //}
 
         return true;
     }

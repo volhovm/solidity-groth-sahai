@@ -36,6 +36,15 @@ contract TestGS {
     }
 
 
+    // This somehow fails when inside verification...
+    function testP2ZeroBug() public returns (bool) {
+        EC.G2Point memory v2 = EC.scalar_mul(EC.P2(), 0);
+        EC.G2Point memory v3 = EC.scalar_mul(EC.P2(), 0);
+        EC.G2Point memory v4 = EC.scalar_mul(EC.P2(), 0);
+        if (!EC.pointEq(v2,v3)) return false;
+        return true;
+    }
+
     event EDebugCom(GS.GSCom com);
 
     function verifyProof1(GS.GSInstance memory inst,
@@ -44,18 +53,25 @@ contract TestGS {
                           int[][][] memory rst,
                           int[2][2][2] memory paramsRand
                          ) public returns (bool) {
-        //emit EDebug("Point1");
+        emit EDebug("Point1");
         EC.G1Point[] memory x = new EC.G1Point[](inst.m);
         EC.G2Point[] memory y = new EC.G2Point[](inst.n);
         for (uint i = 0; i < inst.m; i++) { x[i] = EC.scalar_mul(EC.P1(), x0[i]); }
         for (uint i = 0; i < inst.n; i++) { y[i] = EC.scalar_mul(EC.P2(), y0[i]); }
 
+        emit EDebug("Params");
         GS.GSParams memory params = GS.buildParams(paramsRand);
+        emit EDebug("Comitting");
         GS.GSCom memory com = GS.commit(inst,params,x,y,rst);
-        //emit EDebugCom(com);
+        emit EDebug("Proving");
         GS.GSProof memory proof = GS.prove(inst,params,com,x,y,rst);
+        emit EDebug("Verifying");
 
-        return GS.verifyProof(inst, params, com, proof);
+        emit EDebugCom(com);
+        EC.G2Point memory v1 = EC.scalar_mul(EC.P2(), 0);
+        EC.G2Point memory v2 = EC.scalar_mul(EC.P2(), 0);
+        return false;
+        //return GS.verifyProof(inst, params, com, proof);
     }
 
     function dummyFunction(bool a) public view returns (bool) {
